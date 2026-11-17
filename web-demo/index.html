@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mat: Photo Widget Maker - Interactive Web Demo</title>
+  <style>
+    :root {
+      --bg: #1c1c1e;
+      --card-bg: #2c2c2e;
+      --mat-default: #f4eee2;
+      --accent: #ff4757;
+      --text: #ffffff;
+      --text-muted: #8e8e93;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 24px 16px;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    header p {
+      color: var(--text-muted);
+      margin-top: 6px;
+      font-size: 14px;
+    }
+    .app-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 32px;
+      justify-content: center;
+      align-items: flex-start;
+      max-width: 1000px;
+      width: 100%;
+    }
+    /* Phone / Widget Preview Frame */
+    .phone-mockup {
+      width: 360px;
+      height: 480px;
+      background: #000;
+      border-radius: 44px;
+      padding: 18px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), inset 0 0 0 2px #333;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .widget-container {
+      width: 320px;
+      height: 320px;
+      background-color: var(--mat-default);
+      background-image: radial-gradient(#d3cbbd 0.8px, transparent 0.8px);
+      background-size: 12px 12px;
+      border-radius: 28px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      cursor: crosshair;
+      user-select: none;
+    }
+    .widget-label {
+      margin-top: 12px;
+      font-size: 13px;
+      color: #999;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .mat-item {
+      position: absolute;
+      cursor: grab;
+      touch-action: none;
+      transform-origin: center center;
+    }
+    .mat-item:active {
+      cursor: grabbing;
+    }
+    .mat-item.selected {
+      outline: 2px dashed #007aff;
+      outline-offset: 4px;
+    }
+    .cutout-img {
+      max-width: 140px;
+      filter: drop-shadow(0 8px 12px rgba(0,0,0,0.25));
+      pointer-events: none;
+    }
+    .postit {
+      background: #fff375;
+      padding: 12px;
+      width: 110px;
+      height: 100px;
+      font-size: 12px;
+      font-family: "SF Pro Text", cursive, serif;
+      color: #333;
+      box-shadow: 2px 5px 10px rgba(0,0,0,0.15);
+      border-radius: 2px;
+      pointer-events: none;
+    }
+    .letter-tile {
+      background: #111;
+      color: #fff;
+      font-family: "Courier New", Courier, monospace;
+      font-weight: 900;
+      font-size: 26px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      box-shadow: 2px 4px 8px rgba(0,0,0,0.3);
+      pointer-events: none;
+    }
+    .emoji-sticker {
+      font-size: 48px;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
+      pointer-events: none;
+    }
+    /* Controls Panel */
+    .control-panel {
+      flex: 1;
+      min-width: 320px;
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
+    .panel-section {
+      margin-bottom: 20px;
+    }
+    .panel-section h3 {
+      font-size: 15px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    button {
+      background: #3a3a3c;
+      color: #fff;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    button:hover {
+      background: #48484a;
+      transform: translateY(-1px);
+    }
+    button.primary {
+      background: #007aff;
+    }
+    button.primary:hover {
+      background: #0062cc;
+    }
+    .color-swatches {
+      display: flex;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .swatch {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: transform 0.15s ease;
+    }
+    .swatch:hover {
+      transform: scale(1.1);
+    }
+    .swatch.active {
+      border-color: #fff;
+    }
+    .instruction-card {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #ccc;
+    }
+    .instruction-card code {
+      color: #64d2ff;
+      background: rgba(0,0,0,0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Mat: Photo Widget Maker (Architecture Demo)</h1>
+    <p>Live subject cutouts, drag-and-drop collage layout, and WidgetKit sync simulation</p>
+  </header>
+
+  <div class="app-container">
+    <!-- Mockup Preview -->
+    <div class="phone-mockup">
+      <div id="widgetCanvas" class="widget-container">
+        <!-- Default Cutout -->
+        <div class="mat-item selected" style="top: 80px; left: 80px; transform: rotate(-5deg);" data-rot="-5">
+          <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=260&q=80" 
+               class="cutout-img" 
+               style="clip-path: circle(46% at 50% 50%);" 
+               alt="Dog Cutout" />
+        </div>
+        <!-- Post-it -->
+        <div class="mat-item" style="top: 25px; left: 160px; transform: rotate(4deg);" data-rot="4">
+          <div class="postit">
+            <b>Sunday vibes</b><br>
+            Coffee & morning walks ☕️✨
+          </div>
+        </div>
+        <!-- Letter tiles -->
+        <div class="mat-item" style="top: 220px; left: 40px; transform: rotate(-8deg);" data-rot="-8">
+          <span class="letter-tile">M</span>
+        </div>
+        <div class="mat-item" style="top: 215px; left: 85px; transform: rotate(6deg);" data-rot="6">
+          <span class="letter-tile">A</span>
+        </div>
+        <div class="mat-item" style="top: 225px; left: 130px; transform: rotate(-3deg);" data-rot="-3">
+          <span class="letter-tile">T</span>
+        </div>
+      </div>
+      <div class="widget-label">
+        <span>Mat Home Widget (Small / Medium)</span>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="control-panel">
+      <div class="panel-section">
+        <h3>Add Elements</h3>
+        <div class="button-group">
+          <button id="addCutoutBtn">📸 Add Cutout</button>
+          <button id="addPostitBtn">📝 Add Post-It</button>
+          <button id="addStickerBtn">✨ Add Sticker</button>
+          <button id="addLetterBtn">🔤 Add Letter</button>
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <h3>Mat Color / Texture</h3>
+        <div class="color-swatches">
+          <div class="swatch active" style="background: #f4eee2;" data-color="#f4eee2"></div>
+          <div class="swatch" style="background: #e2eaf4;" data-color="#e2eaf4"></div>
+          <div class="swatch" style="background: #f4e2ea;" data-color="#f4e2ea"></div>
+          <div class="swatch" style="background: #2b2b2b;" data-color="#2b2b2b"></div>
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <h3>Selected Item Controls</h3>
+        <div class="button-group">
+          <button id="rotateLeftBtn">↺ Rotate -15°</button>
+          <button id="rotateRightBtn">↻ Rotate +15°</button>
+          <button id="deleteBtn" style="color: #ff453a;">🗑 Delete</button>
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <h3>Engine Evidence</h3>
+        <div class="instruction-card">
+          • <b>Subject Lifting:</b> Uses iOS 17+ <code>VNGenerateForegroundInstanceMaskRequest</code>.<br>
+          • <b>Widget Sync:</b> Shares canvas JSON and PNG assets via <code>App Groups</code> to <code>WidgetKit</code>.<br>
+          • <b>Interactive gestures:</b> Supports simultaneous drag, pinch-to-scale, and rotation.
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <button class="primary" style="width: 100%; justify-content: center;" onclick="alert('Synced to WidgetKit timeline storage!')">
+          💾 Save & Reload Widget Timelines
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('widgetCanvas');
+    let activeItem = document.querySelector('.mat-item.selected');
+
+    // Selection & Drag handling
+    function attachDragListeners(item) {
+      let isDragging = false;
+      let startX, startY;
+      let initialLeft, initialTop;
+
+      item.addEventListener('mousedown', (e) => {
+        if (activeItem) activeItem.classList.remove('selected');
+        activeItem = item;
+        item.classList.add('selected');
+        
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        initialLeft = item.offsetLeft;
+        initialTop = item.offsetTop;
+        e.stopPropagation();
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isDragging || activeItem !== item) return;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        item.style.left = `${initialLeft + dx}px`;
+        item.style.top = `${initialTop + dy}px`;
+      });
+
+      window.addEventListener('mouseup', () => {
+        isDragging = false;
+      });
+    }
+
+    document.querySelectorAll('.mat-item').forEach(attachDragListeners);
+
+    canvas.addEventListener('click', () => {
+      if (activeItem) {
+        activeItem.classList.remove('selected');
+        activeItem = null;
+      }
+    });
+
+    // Swatches
+    document.querySelectorAll('.swatch').forEach(swatch => {
+      swatch.addEventListener('click', () => {
+        document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+        swatch.classList.add('active');
+        canvas.style.backgroundColor = swatch.dataset.color;
+      });
+    });
+
+    // Item actions
+    document.getElementById('rotateLeftBtn').addEventListener('click', () => {
+      if (!activeItem) return;
+      let rot = parseInt(activeItem.dataset.rot || 0) - 15;
+      activeItem.dataset.rot = rot;
+      activeItem.style.transform = `rotate(${rot}deg)`;
+    });
+
+    document.getElementById('rotateRightBtn').addEventListener('click', () => {
+      if (!activeItem) return;
+      let rot = parseInt(activeItem.dataset.rot || 0) + 15;
+      activeItem.dataset.rot = rot;
+      activeItem.style.transform = `rotate(${rot}deg)`;
+    });
+
+    document.getElementById('deleteBtn').addEventListener('click', () => {
+      if (!activeItem) return;
+      activeItem.remove();
+      activeItem = null;
+    });
+
+    // Add elements
+    document.getElementById('addPostitBtn').addEventListener('click', () => {
+      const text = prompt('Enter note text:', 'Make memories today ✨');
+      if (!text) return;
+      const el = document.createElement('div');
+      el.className = 'mat-item';
+      el.style.top = '100px';
+      el.style.left = '100px';
+      el.dataset.rot = '2';
+      el.style.transform = 'rotate(2deg)';
+      el.innerHTML = `<div class="postit">${text}</div>`;
+      canvas.appendChild(el);
+      attachDragListeners(el);
+    });
+
+    document.getElementById('addStickerBtn').addEventListener('click', () => {
+      const emojis = ['🌟', '💖', '🐶', '🍕', '🎉', '🪴'];
+      const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+      const el = document.createElement('div');
+      el.className = 'mat-item';
+      el.style.top = '120px';
+      el.style.left = '120px';
+      el.innerHTML = `<div class="emoji-sticker">${emoji}</div>`;
+      canvas.appendChild(el);
+      attachDragListeners(el);
+    });
+
+    document.getElementById('addLetterBtn').addEventListener('click', () => {
+      const char = prompt('Enter a single character:', 'A') || 'A';
+      const el = document.createElement('div');
+      el.className = 'mat-item';
+      el.style.top = '150px';
+      el.style.left = '150px';
+      el.innerHTML = `<span class="letter-tile">${char.toUpperCase().slice(0, 1)}</span>`;
+      canvas.appendChild(el);
+      attachDragListeners(el);
+    });
+
+    document.getElementById('addCutoutBtn').addEventListener('click', () => {
+      const cutouts = [
+        'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=260&q=80',
+        'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=260&q=80'
+      ];
+      const selected = cutouts[Math.floor(Math.random() * cutouts.length)];
+      const el = document.createElement('div');
+      el.className = 'mat-item';
+      el.style.top = '70px';
+      el.style.left = '70px';
+      el.dataset.rot = '-4';
+      el.style.transform = 'rotate(-4deg)';
+      el.innerHTML = `<img src="${selected}" class="cutout-img" style="clip-path: ellipse(48% 46% at 50% 50%);" alt="Cutout">`;
+      canvas.appendChild(el);
+      attachDragListeners(el);
+    });
+  </script>
+</body>
+</html>
